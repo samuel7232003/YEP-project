@@ -43,9 +43,10 @@ export interface VoteResponse {
 export interface AdminUser {
   _id: string;
   username?: string;
-  password: string;
+  password?: string;
   name?: string;
   image?: string;
+  status?: string;
   voteCount?: number;
   createdAt?: string;
   updatedAt?: string;
@@ -57,6 +58,12 @@ export interface AdminUsersResponse {
 }
 
 export interface CreateUserResponse {
+  success: boolean;
+  message: string;
+  data: AdminUser;
+}
+
+export interface UpdateUserResponse {
   success: boolean;
   message: string;
   data: AdminUser;
@@ -93,8 +100,9 @@ export const votingApi = {
     return response.data;
   },
 
-  getUsernames: async (): Promise<{ success: boolean; data: string[] }> => {
-    const response = await axiosInstance.get('/auth/usernames');
+  getUsernames: async (hasPassword?: boolean): Promise<{ success: boolean; data: string[] }> => {
+    const params = hasPassword !== undefined ? { hasPassword: hasPassword.toString() } : {};
+    const response = await axiosInstance.get('/auth/usernames', { params });
     return response.data;
   },
 
@@ -155,6 +163,30 @@ export const votingApi = {
     const response = await axiosInstance.post(
       '/admin/users',
       body,
+      { headers }
+    );
+    return response.data;
+  },
+
+  updateAdminUser: async (
+    userId: string,
+    data: {
+      username?: string;
+      password?: string;
+      name?: string;
+      image?: string;
+      status?: string;
+    },
+    adminPassword?: string
+  ): Promise<UpdateUserResponse> => {
+    const headers: Record<string, string> = {};
+    if (adminPassword) {
+      const credentials = btoa(`admin:${adminPassword}`);
+      headers.Authorization = `Basic ${credentials}`;
+    }
+    const response = await axiosInstance.put(
+      `/admin/users/${userId}`,
+      data,
       { headers }
     );
     return response.data;

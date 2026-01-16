@@ -18,6 +18,17 @@ const AdminPage = () => {
   });
   const [creating, setCreating] = useState<boolean>(false);
 
+  // Edit user state
+  const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
+  const [editForm, setEditForm] = useState({
+    username: '',
+    password: '',
+    name: '',
+    image: '',
+    status: '',
+  });
+  const [updating, setUpdating] = useState<boolean>(false);
+
   useEffect(() => {
     // Check if admin is already authenticated
     const storedPassword = sessionStorage.getItem('adminPassword');
@@ -128,6 +139,96 @@ const AdminPage = () => {
   const handlePasswordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handlePasswordSubmit(e);
+    }
+  };
+
+  const handleEditUser = (user: AdminUser) => {
+    setEditingUser(user);
+    setEditForm({
+      username: user.username || '',
+      password: '',
+      name: user.name || '',
+      image: user.image || '',
+      status: user.status || '',
+    });
+    setError('');
+  };
+
+  const handleCloseEditModal = () => {
+    setEditingUser(null);
+    setEditForm({
+      username: '',
+      password: '',
+      name: '',
+      image: '',
+      status: '',
+    });
+    setError('');
+  };
+
+  const handleEditInputChange = (field: keyof typeof editForm, value: string) => {
+    setEditForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleUpdateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate password format only if provided
+    if (editForm.password && !/^\d{6}$/.test(editForm.password)) {
+      setError('Password phải gồm 6 số');
+      return;
+    }
+
+    if (!editingUser) return;
+
+    setUpdating(true);
+    setError('');
+    try {
+      const updateData: {
+        username?: string;
+        password?: string;
+        name?: string;
+        image?: string;
+        status?: string;
+      } = {};
+
+      if (editForm.username !== editingUser.username) {
+        updateData.username = editForm.username;
+      }
+      if (editForm.password) {
+        updateData.password = editForm.password;
+      }
+      if (editForm.name !== (editingUser.name || '')) {
+        updateData.name = editForm.name || undefined;
+      }
+      if (editForm.image !== (editingUser.image || '')) {
+        updateData.image = editForm.image || undefined;
+      }
+      if (editForm.status !== (editingUser.status || '')) {
+        updateData.status = editForm.status || undefined;
+      }
+
+      const response = await votingApi.updateAdminUser(
+        editingUser._id,
+        updateData,
+        adminPassword
+      );
+      if (response.success) {
+        // Refresh users list
+        await fetchUsers(adminPassword);
+        // Close modal
+        handleCloseEditModal();
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Lỗi khi cập nhật người dùng');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleModalKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Escape') {
+      handleCloseEditModal();
     }
   };
 
@@ -265,8 +366,10 @@ const AdminPage = () => {
                     <th>Password</th>
                     <th>Name</th>
                     <th>Image</th>
+                    <th>Status</th>
                     <th>Vote Count</th>
                     <th>Created At</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -274,7 +377,7 @@ const AdminPage = () => {
                     <tr key={user._id}>
                       <td className={styles.idCell}>{user._id}</td>
                       <td>{user.username || '-'}</td>
-                      <td className={styles.passwordCell}>{user.password}</td>
+                      <td className={styles.passwordCell}>{user.password || '-'}</td>
                       <td>{user.name || '-'}</td>
                       <td>
                         {user.image ? (
@@ -287,11 +390,22 @@ const AdminPage = () => {
                           '-'
                         )}
                       </td>
+                      <td>{user.status || '-'}</td>
                       <td>{user.voteCount ?? '-'}</td>
                       <td>
                         {user.createdAt
                           ? new Date(user.createdAt).toLocaleString('vi-VN')
                           : '-'}
+                      </td>
+                      <td>
+                        <button
+                          onClick={() => handleEditUser(user)}
+                          className={styles.editButton}
+                          tabIndex={0}
+                          aria-label={`Edit user ${user.username || user._id}`}
+                        >
+                          Sửa
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -301,6 +415,127 @@ const AdminPage = () => {
           )}
         </div>
       </div>
+
+      {/* Edit User Modal */}
+      {editingUser && (
+        <div
+          className={styles.modalOverlay}
+          onClick={handleCloseEditModal}
+          onKeyDown={handleModalKeyDown}
+          tabIndex={-1}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+        >
+          <div
+            className={styles.modalContent}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.modalHeader}>
+              <h2 id="edit-modal-title" className={styles.modalTitle}>
+                Sửa người dùng
+              </h2>
+              <button
+                onClick={handleCloseEditModal}
+                className={styles.modalCloseButton}
+                tabIndex={0}
+                aria-label="Close modal"
+              >
+                ×
+              </button>
+            </div>
+            <form onSubmit={handleUpdateUser} className={styles.form}>
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label htmlFor="edit-username" className={styles.label}>
+                    Username *
+                  </label>
+                  <input
+                    id="edit-username"
+                    type="text"
+                    value={editForm.username}
+                    onChange={(e) => handleEditInputChange('username', e.target.value)}
+                    className={styles.input}
+                    required
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label htmlFor="edit-password" className={styles.label}>
+                    Password (6 số) - Để trống nếu không đổi
+                  </label>
+                  <input
+                    id="edit-password"
+                    type="text"
+                    value={editForm.password}
+                    onChange={(e) => handleEditInputChange('password', e.target.value)}
+                    className={styles.input}
+                    maxLength={6}
+                    pattern="\d{6}"
+                    placeholder="Để trống nếu không đổi mật khẩu"
+                  />
+                </div>
+              </div>
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label htmlFor="edit-name" className={styles.label}>
+                    Name
+                  </label>
+                  <input
+                    id="edit-name"
+                    type="text"
+                    value={editForm.name}
+                    onChange={(e) => handleEditInputChange('name', e.target.value)}
+                    className={styles.input}
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label htmlFor="edit-image" className={styles.label}>
+                    Image URL
+                  </label>
+                  <input
+                    id="edit-image"
+                    type="text"
+                    value={editForm.image}
+                    onChange={(e) => handleEditInputChange('image', e.target.value)}
+                    className={styles.input}
+                  />
+                </div>
+              </div>
+              <div className={styles.formGroup}>
+                <label htmlFor="edit-status" className={styles.label}>
+                  Status
+                </label>
+                <input
+                  id="edit-status"
+                  type="text"
+                  value={editForm.status}
+                  onChange={(e) => handleEditInputChange('status', e.target.value)}
+                  className={styles.input}
+                  maxLength={30}
+                  placeholder="Trạng thái (tối đa 30 ký tự)"
+                />
+              </div>
+              <div className={styles.modalActions}>
+                <button
+                  type="button"
+                  onClick={handleCloseEditModal}
+                  className={styles.cancelButton}
+                  tabIndex={0}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className={styles.button}
+                  disabled={updating}
+                >
+                  {updating ? 'Đang cập nhật...' : 'Cập nhật'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

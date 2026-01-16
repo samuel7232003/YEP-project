@@ -21,7 +21,11 @@
   border-color: var(--color-logo-brown);
   box-shadow: 0 6px 12px rgba(139, 111, 71, 0.3), 0 4px 8px rgba(0, 0, 0, 0.2);
   transform: translateY(-4px);
-  background: linear-gradient(135deg, var(--color-background-primary) 0%, var(--color-gray-lighter) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-background-primary) 0%,
+    var(--color-gray-lighter) 100%
+  );
 }
 
 .card:focus {
@@ -36,7 +40,11 @@
 
 .card.dangerous {
   border-color: var(--color-error);
-  background: linear-gradient(135deg, var(--color-danger-light) 0%, var(--color-danger-lighter) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-danger-light) 0%,
+    var(--color-danger-lighter) 100%
+  );
   box-shadow: 0 4px 12px rgba(211, 47, 47, 0.4),
     0 2px 6px rgba(211, 47, 47, 0.3);
   animation: pulse-danger 2s ease-in-out infinite;
@@ -46,7 +54,11 @@
   border-color: var(--color-error-darker);
   box-shadow: 0 6px 16px rgba(211, 47, 47, 0.5),
     0 4px 10px rgba(211, 47, 47, 0.4);
-  background: linear-gradient(135deg, var(--color-danger-lighter) 0%, var(--color-danger-lightest) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-danger-lighter) 0%,
+    var(--color-danger-lightest) 100%
+  );
 }
 
 @keyframes pulse-danger {

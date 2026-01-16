@@ -10,10 +10,13 @@ interface LoginModalProps {
   onLoginSuccess: () => void;
 }
 
+type LoginMode = 'first-time' | 'registered';
+
 const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
   const dispatch = useAppDispatch();
   const { loading, error } = useAppSelector((state) => state.voting);
   
+  const [mode, setMode] = useState<LoginMode>('registered');
   const [selectedUsername, setSelectedUsername] = useState('');
   const [password, setPassword] = useState('');
   const [localError, setLocalError] = useState('');
@@ -25,13 +28,21 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
       setPassword('');
       setLocalError('');
       dispatch(clearError());
-      
-      // Fetch usernames when modal opens
+    }
+  }, [isOpen, dispatch]);
+
+  useEffect(() => {
+    if (isOpen) {
+      // Fetch usernames based on selected mode
       const fetchUsernames = async () => {
         try {
-          const response = await votingApi.getUsernames();
+          // false = users without password (first-time), true = users with password (registered)
+          const hasPassword = mode === 'registered';
+          const response = await votingApi.getUsernames(hasPassword);
           if (response.success) {
             setUsernames(response.data);
+            // Reset selected username when mode changes
+            setSelectedUsername('');
           }
         } catch (error) {
           console.error('Error fetching usernames:', error);
@@ -39,7 +50,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
       };
       fetchUsernames();
     }
-  }, [isOpen, dispatch]);
+  }, [isOpen, mode]);
 
   const handleUsernameChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedUsername(e.target.value);
@@ -98,7 +109,16 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
     }
   };
 
+  const handleModeChange = (newMode: LoginMode) => {
+    setMode(newMode);
+    setSelectedUsername('');
+    setPassword('');
+    setLocalError('');
+    dispatch(clearError());
+  };
+
   const handleClose = () => {
+    setMode('registered');
     setSelectedUsername('');
     setPassword('');
     setLocalError('');
@@ -130,6 +150,25 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
         </button>
         
         <form onSubmit={handleSubmit} className={styles.form}>
+          <div className={styles.modeSelector}>
+            <button
+              type="button"
+              className={`${styles.modeButton} ${mode === 'first-time' ? styles.modeButtonActive : ''}`}
+              onClick={() => handleModeChange('first-time')}
+              disabled={loading}
+            >
+              Vào lần đầu
+            </button>
+            <button
+              type="button"
+              className={`${styles.modeButton} ${mode === 'registered' ? styles.modeButtonActive : ''}`}
+              onClick={() => handleModeChange('registered')}
+              disabled={loading}
+            >
+              Đã đăng kí
+            </button>
+          </div>
+
           <div className={styles.formGroup}>
             <label htmlFor="username" className={styles.label}>
               Chọn tên người dùng
@@ -169,7 +208,9 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
               disabled={loading}
             />
             <small className={styles.helpText}>
-              Nếu đăng nhập lần đầu, nhập mật khẩu khởi tạo (6 số). Nếu đã có mật khẩu, nhập mật khẩu hiện tại.
+              {mode === 'first-time' 
+                ? 'Vui lòng nhập mật khẩu cho lần đăng nhập sau (6 số). Mật khẩu này sẽ được sử dụng cho các lần đăng nhập tiếp theo.'
+                : 'Vui lòng nhập đúng mật khẩu khi bạn vào lần đầu (6 số).'}
             </small>
           </div>
 
@@ -180,7 +221,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
             className={styles.submitButton}
             disabled={loading}
           >
-            {loading ? 'Đang xử lý...' : 'Tiếp tục Bình chọn'}
+            {loading ? 'Đang xử lý...' : 'Tiếp tục'}
           </button>
         </form>
       </div>

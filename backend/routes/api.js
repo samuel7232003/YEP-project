@@ -36,6 +36,7 @@ const { adminAuth } = require("../middleware/adminAuthMiddleware");
 const {
   getAllUsers,
   createUser: createAdminUser,
+  updateUser: updateAdminUser,
 } = require("../controllers/adminController");
 const routerAPI = express.Router();
 
@@ -68,5 +69,6 @@ routerAPI.get("/voting/users/:id/voters", getVoters);
 // Admin routes
 routerAPI.get("/admin/users", adminAuth, getAllUsers);
 routerAPI.post("/admin/users", adminAuth, createAdminUser);
+routerAPI.put("/admin/users/:id", adminAuth, updateAdminUser);
 
 module.exports = routerAPI;

@@ -106,7 +106,27 @@ const getProfile = async (req, res) => {
 const getUsernames = async (req, res) => {
   try {
     const User = require("../models/User");
-    const users = await User.find({}, "username").sort({ username: 1 });
+    const { hasPassword } = req.query;
+
+    // Build query based on hasPassword filter
+    let query = {};
+    if (hasPassword === "true") {
+      // Users with password (not null and not empty)
+      query = { password: { $exists: true, $ne: null, $ne: "" } };
+    } else if (hasPassword === "false") {
+      // Users without password (null, empty, or doesn't exist)
+      query = {
+        $or: [
+          { password: { $exists: false } },
+          { password: null },
+          { password: "" },
+        ],
+      };
+    }
+
+    const users = await User.find(query, "username password").sort({
+      username: 1,
+    });
     const usernames = users.map((user) => user.username);
 
     res.status(200).json({

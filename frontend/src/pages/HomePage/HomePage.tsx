@@ -550,7 +550,7 @@ const HomePage = () => {
       <div className={styles.header}>
         <h1 className={styles.title}>Bảng Xếp Hạng</h1>
         <h1 className={styles.title}>Mức Độ Tình Nghi</h1>
-        {currentUser && (
+        {currentUser ? (
           <div className={styles.userInfo}>
             <div className={styles.userInfoLeft}>
               {userProfile?.image && (
@@ -625,6 +625,21 @@ const HomePage = () => {
               ({userVotes.length}/3 votes)
             </span>
           </div>
+        ):(
+          <button
+            className={styles.loginButton}
+            onClick={() => setIsLoginModalOpen(true)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setIsLoginModalOpen(true);
+              }
+            }}
+            tabIndex={0}
+            aria-label="Đăng nhập"
+          >
+            Đăng nhập
+          </button>
         )}
       </div>
 
