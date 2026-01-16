@@ -1,0 +1,228 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--color-background-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--spacing-md);
+}
+
+.modal {
+  background-color: var(--color-background-primary);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-xl);
+  max-width: 500px;
+  width: 100%;
+  position: relative;
+  box-shadow: var(--shadow-2xl);
+}
+
+.closeButton {
+  position: absolute;
+  top: var(--spacing-md);
+  right: var(--spacing-md);
+  background: none;
+  border: none;
+  font-size: var(--font-size-3xl);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--border-radius-full);
+  transition: all 0.2s;
+}
+
+.closeButton:hover:not(:disabled) {
+  background-color: var(--color-background-tertiary);
+  color: var(--color-text-primary);
+}
+
+.closeButton:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.closeButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-lg);
+  text-align: center;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  position: relative;
+}
+
+.label {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.inputContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.input {
+  flex: 1;
+  padding: var(--spacing-md);
+  border: 2px solid var(--color-border-primary);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-md);
+  color: var(--color-text-primary);
+  background-color: var(--color-background-primary);
+  transition: border-color 0.2s;
+}
+
+.emojiButton {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-background-secondary);
+  border: 2px solid var(--color-border-primary);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-xl);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  height: 48px;
+}
+
+.emojiButton:hover:not(:disabled) {
+  background-color: var(--color-background-tertiary);
+  border-color: var(--color-primary);
+  transform: scale(1.05);
+}
+
+.emojiButton:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.emojiButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.emojiPickerContainer {
+  position: absolute;
+  top: calc(100% + var(--spacing-xs));
+  left: 0;
+  z-index: 1002;
+  box-shadow: var(--shadow-2xl);
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+  background-color: var(--color-background-primary);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.helpText {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-top: var(--spacing-xs);
+  line-height: 1.4;
+}
+
+.error {
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-sm);
+  background-color: var(--color-error-light);
+  border-radius: var(--border-radius-sm);
+  text-align: center;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-sm);
+}
+
+.cancelButton,
+.submitButton {
+  flex: 1;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancelButton {
+  background-color: var(--color-background-secondary);
+  color: var(--color-text-primary);
+  border: 2px solid var(--color-border-primary);
+}
+
+.cancelButton:hover:not(:disabled) {
+  background-color: var(--color-background-tertiary);
+  border-color: var(--color-text-secondary);
+}
+
+.cancelButton:focus {
+  outline: 2px solid var(--color-text-secondary);
+  outline-offset: 2px;
+}
+
+.submitButton {
+  background-color: var(--color-primary);
+  color: var(--color-text-inverse);
+  border: none;
+}
+
+.submitButton:hover:not(:disabled) {
+  background-color: var(--color-primary-dark);
+}
+
+.submitButton:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.submitButton:active:not(:disabled),
+.cancelButton:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.submitButton:disabled,
+.cancelButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

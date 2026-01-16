@@ -1,0 +1,30 @@
+.header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--spacing-lg) var(--spacing-xl);
+  background-color: var(--color-background-primary);
+  border-bottom: 2px solid var(--color-border-primary);
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo {
+  height: 60px;
+  width: auto;
+  object-fit: contain;
+}
+
+@media (max-width: 768px) {
+  .logo {
+    height: 48px;
+  }
+  
+  .header {
+    padding: var(--spacing-md) var(--spacing-lg);
+  }
+}

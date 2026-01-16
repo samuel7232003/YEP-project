@@ -1,0 +1,147 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--color-background-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--spacing-md);
+}
+
+.modal {
+  background-color: var(--color-background-primary);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-xl);
+  max-width: 500px;
+  width: 100%;
+  position: relative;
+  box-shadow: var(--shadow-2xl);
+}
+
+.closeButton {
+  position: absolute;
+  top: var(--spacing-md);
+  right: var(--spacing-md);
+  background: none;
+  border: none;
+  font-size: var(--font-size-3xl);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--border-radius-full);
+  transition: all 0.2s;
+}
+
+.closeButton:hover {
+  background-color: var(--color-background-tertiary);
+  color: var(--color-text-primary);
+}
+
+.closeButton:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-lg);
+  text-align: center;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.label {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.required {
+  color: var(--color-error);
+  margin-left: 2px;
+}
+
+.select,
+.input {
+  padding: var(--spacing-md);
+  border: 2px solid var(--color-border-primary);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-md);
+  color: var(--color-text-primary);
+  background-color: var(--color-background-primary);
+  transition: border-color 0.2s;
+}
+
+.select:focus,
+.input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.input {
+  font-family: monospace;
+  letter-spacing: 0.5em;
+  text-align: center;
+}
+
+.helpText {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-top: var(--spacing-xs);
+  line-height: 1.4;
+}
+
+.error {
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-sm);
+  background-color: var(--color-error-light);
+  border-radius: var(--border-radius-sm);
+  text-align: center;
+}
+
+.submitButton {
+  padding: var(--spacing-md) var(--spacing-lg);
+  background-color: var(--color-primary);
+  color: var(--color-text-inverse);
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: var(--spacing-sm);
+}
+
+.submitButton:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.submitButton:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.submitButton:active {
+  transform: scale(0.98);
+}

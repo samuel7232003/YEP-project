@@ -1,0 +1,191 @@
+import React, { useState, useEffect } from 'react';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { loginUser, clearError } from '../../store/slices/votingSlice';
+import { votingApi } from '../../services/votingApi';
+import styles from './LoginModal.module.css';
+
+interface LoginModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onLoginSuccess: () => void;
+}
+
+const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
+  const dispatch = useAppDispatch();
+  const { loading, error } = useAppSelector((state) => state.voting);
+  
+  const [selectedUsername, setSelectedUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [localError, setLocalError] = useState('');
+  const [usernames, setUsernames] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedUsername('');
+      setPassword('');
+      setLocalError('');
+      dispatch(clearError());
+      
+      // Fetch usernames when modal opens
+      const fetchUsernames = async () => {
+        try {
+          const response = await votingApi.getUsernames();
+          if (response.success) {
+            setUsernames(response.data);
+          }
+        } catch (error) {
+          console.error('Error fetching usernames:', error);
+        }
+      };
+      fetchUsernames();
+    }
+  }, [isOpen, dispatch]);
+
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedUsername(e.target.value);
+    setLocalError('');
+    dispatch(clearError());
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, ''); // Only allow digits
+    if (value.length <= 6) {
+      setPassword(value);
+      setLocalError('');
+      dispatch(clearError());
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!selectedUsername) {
+      setLocalError('Vui lòng chọn tên người dùng');
+      return;
+    }
+
+    // Password is required
+    if (!password) {
+      setLocalError('Vui lòng nhập mật khẩu');
+      return;
+    }
+
+    if (password.length !== 6) {
+      setLocalError('Mật khẩu phải gồm 6 số');
+      return;
+    }
+
+    setLocalError('');
+    dispatch(clearError());
+
+    try {
+      // Login with password (required for all users)
+      // For first-time login, password will be set as initial password
+      // For subsequent logins, password must match
+      const loginResult = await dispatch(loginUser({ username: selectedUsername, password }));
+      
+      if (loginUser.fulfilled.match(loginResult)) {
+        onLoginSuccess();
+        onClose();
+      } else if (loginUser.rejected.match(loginResult)) {
+        // Login failed - show error message
+        const errorMessage = loginResult.error?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin đăng nhập';
+        setLocalError(errorMessage);
+      }
+    } catch (err: any) {
+      const errorMessage = err?.message || 'Có lỗi xảy ra. Vui lòng thử lại';
+      setLocalError(errorMessage);
+    }
+  };
+
+  const handleClose = () => {
+    setSelectedUsername('');
+    setPassword('');
+    setLocalError('');
+    dispatch(clearError());
+    onClose();
+  };
+
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      handleClose();
+    }
+  };
+
+  const displayError = localError || error;
+
+  if (!isOpen) return null;
+
+  return (
+    <div className={styles.overlay} onClick={handleBackdropClick}>
+      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+        <button
+          className={styles.closeButton}
+          onClick={handleClose}
+          aria-label="Đóng"
+          tabIndex={0}
+          disabled={loading}
+        >
+          ×
+        </button>
+        
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <div className={styles.formGroup}>
+            <label htmlFor="username" className={styles.label}>
+              Chọn tên người dùng
+            </label>
+            <select
+              id="username"
+              value={selectedUsername}
+              onChange={handleUsernameChange}
+              className={styles.select}
+              required
+              disabled={loading}
+            >
+              <option value="">-- Chọn tên người dùng --</option>
+              {usernames.map((username) => (
+                <option key={username} value={username}>
+                  {username}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="password" className={styles.label}>
+              Mật khẩu (6 số) <span className={styles.required}>*</span>
+            </label>
+            <input
+              id="password"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={password}
+              onChange={handlePasswordChange}
+              className={styles.input}
+              placeholder="Nhập 6 số"
+              maxLength={6}
+              required
+              disabled={loading}
+            />
+            <small className={styles.helpText}>
+              Nếu đăng nhập lần đầu, nhập mật khẩu khởi tạo (6 số). Nếu đã có mật khẩu, nhập mật khẩu hiện tại.
+            </small>
+          </div>
+
+          {displayError && <div className={styles.error}>{displayError}</div>}
+
+          <button 
+            type="submit" 
+            className={styles.submitButton}
+            disabled={loading}
+          >
+            {loading ? 'Đang xử lý...' : 'Tiếp tục Bình chọn'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default React.memo(LoginModal);

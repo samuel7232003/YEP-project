@@ -1,0 +1,162 @@
+:root {
+  /* ============================================
+     COLOR VARIABLES
+     ============================================ */
+
+  /* Primary Colors - Logo Theme (Brown from detective coat) */
+  --color-primary: #8b6f47;
+  --color-primary-dark: #6b5535;
+  --color-primary-light: #a6896b;
+  --color-primary-lighter: #c4a88f;
+  --color-primary-lightest: #d4c4b0;
+  --color-primary-transparent: rgba(139, 111, 71, 0.5);
+  
+  /* Logo Theme Colors */
+  --color-logo-black: #000000;
+  --color-logo-white: #ffffff;
+  --color-logo-brown: #8b6f47;
+  --color-logo-brown-dark: #6b5535;
+  --color-logo-brown-light: #a6896b;
+  --color-logo-brown-lighter: #c4a88f;
+  --color-logo-brown-accent: #9d7a52;
+
+  /* Secondary Colors */
+  --color-secondary: #6c757d;
+  --color-secondary-dark: #5a6268;
+  --color-secondary-light: #868e96;
+  --color-secondary-lighter: #adb5bd;
+
+  /* Accent Colors */
+  --color-accent: #ff6b6b;
+  --color-accent-dark: #ee5a5a;
+  --color-accent-light: #ff8787;
+
+  /* Text Colors */
+  --color-text-primary: #212529;
+  --color-text-secondary: #6c757d;
+  --color-text-tertiary: #adb5bd;
+  --color-text-inverse: #ffffff;
+  --color-text-link: #4b809a;
+  --color-text-link-hover: #3d6678;
+
+  /* Background Colors */
+  --color-background-primary: #ffffff;
+  --color-background-secondary: #f8f9fa;
+  --color-background-tertiary: #e9ecef;
+  --color-background-dark: #212529;
+  --color-background-overlay: rgba(0, 0, 0, 0.5);
+  --color-background-overlay-light: rgba(255, 255, 255, 0.15);
+
+  /* Border Colors */
+  --color-border-primary: #dee2e6;
+  --color-border-secondary: #ced4da;
+  --color-border-dark: #adb5bd;
+
+  /* Status Colors */
+  --color-success: #28a745;
+  --color-success-light: #d4edda;
+  --color-warning: #ffc107;
+  --color-warning-light: #fff3cd;
+  --color-error: #dc3545;
+  --color-error-light: #f8d7da;
+  --color-info: #17a2b8;
+  --color-info-light: #d1ecf1;
+
+  /* ============================================
+     FONT SIZE VARIABLES
+     ============================================ */
+
+  /* Base Font Size */
+  --font-size-base: 16px;
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+  --font-size-3xl: 30px;
+  --font-size-4xl: 36px;
+  --font-size-5xl: 48px;
+  --font-size-6xl: 60px;
+
+  /* Heading Font Sizes */
+  --font-size-h1: 2.5rem; /* 40px */
+  --font-size-h2: 2rem; /* 32px */
+  --font-size-h3: 1.75rem; /* 28px */
+  --font-size-h4: 1.5rem; /* 24px */
+  --font-size-h5: 1.25rem; /* 20px */
+  --font-size-h6: 1rem; /* 16px */
+
+  /* Body Text Sizes */
+  --font-size-body: 1rem; /* 16px */
+  --font-size-body-sm: 0.875rem; /* 14px */
+  --font-size-body-lg: 1.125rem; /* 18px */
+
+  /* Small Text */
+  --font-size-caption: 0.75rem; /* 12px */
+  --font-size-small: 0.875rem; /* 14px */
+
+  /* ============================================
+     FONT WEIGHT VARIABLES
+     ============================================ */
+
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+  --font-weight-black: 900;
+
+  /* ============================================
+     LINE HEIGHT VARIABLES
+     ============================================ */
+
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+  --line-height-loose: 2;
+
+  /* ============================================
+     SPACING VARIABLES (Bonus - commonly used)
+     ============================================ */
+
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  --spacing-3xl: 64px;
+
+  /* ============================================
+     BORDER RADIUS VARIABLES (Bonus - commonly used)
+     ============================================ */
+
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --border-radius-xl: 16px;
+  --border-radius-full: 9999px;
+
+  /* ============================================
+     SHADOW VARIABLES (Bonus - commonly used)
+     ============================================ */
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Dark mode support (optional) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-text-primary: #ffffff;
+    --color-text-secondary: #adb5bd;
+    --color-background-primary: #212529;
+    --color-background-secondary: #343a40;
+    --color-border-primary: #495057;
+  }
+}

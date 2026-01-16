@@ -1,0 +1,20 @@
+{
+  "short_name": "YEP Project",
+  "name": "YEP Project",
+  "icons": [
+    {
+      "src": "logo.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "logo.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#8b6f47",
+  "background_color": "#ffffff"
+}
