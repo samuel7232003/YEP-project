@@ -13,7 +13,7 @@
   background: linear-gradient(
     135deg,
     var(--color-background-primary) 0%,
-    #f5f5f5 100%
+    var(--color-gray-light) 100%
   );
 }
 
@@ -21,7 +21,7 @@
   border-color: var(--color-logo-brown);
   box-shadow: 0 6px 12px rgba(139, 111, 71, 0.3), 0 4px 8px rgba(0, 0, 0, 0.2);
   transform: translateY(-4px);
-  background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
+  background: linear-gradient(135deg, var(--color-background-primary) 0%, var(--color-gray-lighter) 100%);
 }
 
 .card:focus {
@@ -36,17 +36,17 @@
 
 .card.dangerous {
   border-color: var(--color-error);
-  background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+  background: linear-gradient(135deg, var(--color-danger-light) 0%, var(--color-danger-lighter) 100%);
   box-shadow: 0 4px 12px rgba(211, 47, 47, 0.4),
     0 2px 6px rgba(211, 47, 47, 0.3);
   animation: pulse-danger 2s ease-in-out infinite;
 }
 
 .card.dangerous:hover {
-  border-color: #c62828;
+  border-color: var(--color-error-darker);
   box-shadow: 0 6px 16px rgba(211, 47, 47, 0.5),
     0 4px 10px rgba(211, 47, 47, 0.4);
-  background: linear-gradient(135deg, #ffcdd2 0%, #ef9a9a 100%);
+  background: linear-gradient(135deg, var(--color-danger-lighter) 0%, var(--color-danger-lightest) 100%);
 }
 
 @keyframes pulse-danger {
@@ -190,18 +190,18 @@
 }
 
 .voteButton.votedButton {
-  background-color: #808080;
-  border-color: #666666;
+  background-color: var(--color-gray-medium);
+  border-color: var(--color-gray-dark);
 }
 
 .voteButton.votedButton:hover:not(.disabled) {
-  background-color: #666666;
+  background-color: var(--color-gray-dark);
   opacity: 0.9;
 }
 
 .voteButton.disabled {
   background-color: var(--color-border-secondary);
-  color: #000;
+  color: var(--color-text-primary);
   cursor: not-allowed;
   opacity: 0.6;
 }

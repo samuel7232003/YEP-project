@@ -45,7 +45,7 @@
 .title {
   font-size: var(--font-size-4xl);
   font-weight: var(--font-weight-bold);
-  color: #fff;
+  color: var(--color-text-inverse);
   margin-bottom: var(--spacing-md);
 }
 
@@ -215,8 +215,8 @@
 }
 
 .logoutButton:hover:not(:disabled) {
-  background-color: #d32f2f;
-  border-color: #d32f2f;
+  background-color: var(--color-error-dark);
+  border-color: var(--color-error-dark);
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(211, 47, 47, 0.3);
 }

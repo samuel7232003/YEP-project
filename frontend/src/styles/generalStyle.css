@@ -59,8 +59,20 @@
   --color-warning-light: #fff3cd;
   --color-error: #dc3545;
   --color-error-light: #f8d7da;
+  --color-error-dark: #d32f2f;
+  --color-error-darker: #c62828;
   --color-info: #17a2b8;
   --color-info-light: #d1ecf1;
+
+  /* Additional Colors for Gradients and Special Cases */
+  --color-gray-light: #f5f5f5;
+  --color-gray-lighter: #fafafa;
+  --color-gray-medium: #808080;
+  --color-gray-dark: #666666;
+  --color-danger-light: #ffebee;
+  --color-danger-lighter: #ffcdd2;
+  --color-danger-lightest: #ef9a9a;
+  --color-tertiary: #cd7f32;
 
   /* ============================================
      FONT SIZE VARIABLES
@@ -148,15 +160,4 @@
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
   --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-}
-
-/* Dark mode support (optional) */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-text-primary: #ffffff;
-    --color-text-secondary: #adb5bd;
-    --color-background-primary: #212529;
-    --color-background-secondary: #343a40;
-    --color-border-primary: #495057;
-  }
 }
