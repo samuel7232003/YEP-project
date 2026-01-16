@@ -2,8 +2,24 @@ import { io, Socket } from 'socket.io-client';
 
 // Socket.IO server runs on root, not /api
 const getSocketUrl = (): string => {
+  // Check if there's a specific Socket.IO URL
+  const socketUrl = process.env.REACT_APP_SOCKET_URL;
+  if (socketUrl) {
+    return socketUrl;
+  }
+  
   const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
-  // Remove /api suffix if present for WebSocket connection
+  
+  // If it's a relative path (starts with /), convert to absolute URL
+  if (apiUrl.startsWith('/')) {
+    // Use current origin and remove /api suffix if present
+    // Socket.IO is mounted on root of backend server, not /api
+    const path = apiUrl.replace(/\/api$/, '');
+    return window.location.origin + path;
+  }
+  
+  // If it's already an absolute URL, remove /api suffix if present
+  // Socket.IO is mounted on root of backend server, not /api
   return apiUrl.replace(/\/api$/, '');
 };
 
