@@ -265,6 +265,11 @@ const CommentModal: React.FC<CommentModalProps> = ({
     e.preventDefault();
     if (!newComment.trim() || submitting || !currentUserId) return;
 
+    // Keep focus on textarea to prevent keyboard from closing
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+    }
+
     setSubmitting(true);
     setError('');
     try {
@@ -287,10 +292,21 @@ const CommentModal: React.FC<CommentModalProps> = ({
         setNewComment('');
         setShowEmojiPicker(false);
         resetTextareaHeight();
-        // Focus back to textarea after successful submission
-        setTimeout(() => {
-          textareaRef.current?.focus();
-        }, 0);
+        
+        // Focus back to textarea after successful submission to keep virtual keyboard open
+        // Use multiple techniques to ensure keyboard stays open on mobile devices
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            if (textareaRef.current) {
+              // Focus and click to ensure keyboard stays open on mobile
+              textareaRef.current.focus();
+              textareaRef.current.click();
+              // On some mobile browsers, we need to trigger input event to keep keyboard visible
+              const event = new Event('input', { bubbles: true });
+              textareaRef.current.dispatchEvent(event);
+            }
+          }, 100);
+        });
       } else {
         setError('Không thể thêm bình luận');
       }
@@ -300,6 +316,12 @@ const CommentModal: React.FC<CommentModalProps> = ({
       pendingCommentIdRef.current = null;
     } finally {
       setSubmitting(false);
+      // Ensure focus is maintained after submission completes
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+        }
+      }, 50);
     }
   };
 
@@ -606,6 +628,10 @@ const CommentModal: React.FC<CommentModalProps> = ({
                 rows={1}
                 maxLength={500}
                 disabled={submitting}
+                inputMode="text"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="sentences"
               />
               <button
                 type="button"
