@@ -41,6 +41,7 @@ const CommentModal: React.FC<CommentModalProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const pendingCommentIdRef = useRef<string | null>(null);
+  const shouldKeepFocusRef = useRef<boolean>(false);
   const currentUserId = userProfile?._id;
 
   useEffect(() => {
@@ -195,18 +196,20 @@ const CommentModal: React.FC<CommentModalProps> = ({
     }
   }, [isOpen, currentUserId]);
 
-  // Keep textarea focused after submission to maintain keyboard open on mobile
+  // Keep textarea focused when clearing after submission to maintain keyboard open on mobile
   useEffect(() => {
-    if (!submitting && newComment === '' && textareaRef.current && currentUserId && isOpen) {
-      // When submission completes and input is cleared, ensure textarea stays focused
-      const timer = setTimeout(() => {
-        if (textareaRef.current && document.activeElement !== textareaRef.current) {
+    if (shouldKeepFocusRef.current && newComment === '' && textareaRef.current && !submitting && isOpen) {
+      // Use requestAnimationFrame to ensure focus happens after render
+      requestAnimationFrame(() => {
+        if (textareaRef.current && shouldKeepFocusRef.current) {
           textareaRef.current.focus();
+          textareaRef.current.setSelectionRange(0, 0);
+          // Reset the flag after focusing
+          shouldKeepFocusRef.current = false;
         }
-      }, 10);
-      return () => clearTimeout(timer);
+      });
     }
-  }, [submitting, newComment, currentUserId, isOpen]);
+  }, [newComment, submitting, isOpen]);
 
   // Close emoji picker when clicking outside
   useEffect(() => {
@@ -267,6 +270,9 @@ const CommentModal: React.FC<CommentModalProps> = ({
 
   const resetTextareaHeight = () => {
     if (textareaRef.current) {
+      // Store focus state before modifying textarea
+      const wasFocused = document.activeElement === textareaRef.current;
+      
       const textarea = textareaRef.current;
       const computedStyle = window.getComputedStyle(textarea);
       const lineHeight = parseFloat(computedStyle.lineHeight) || parseFloat(computedStyle.fontSize) * 1.5;
@@ -275,6 +281,11 @@ const CommentModal: React.FC<CommentModalProps> = ({
       const minHeight = lineHeight + paddingTop + paddingBottom;
       textarea.style.height = `${minHeight}px`;
       textarea.style.overflowY = 'hidden';
+      
+      // Restore focus if it was focused before
+      if (wasFocused) {
+        textarea.focus();
+      }
     }
   };
 
@@ -283,29 +294,17 @@ const CommentModal: React.FC<CommentModalProps> = ({
     if (!newComment.trim() || submitting || !currentUserId) return;
 
     // Check if textarea is currently focused to maintain keyboard open
-    const shouldKeepFocus = document.activeElement === textareaRef.current;
+    const wasFocused = document.activeElement === textareaRef.current;
+    shouldKeepFocusRef.current = wasFocused;
     
     // Store the comment text before clearing
     const commentText = newComment.trim();
 
-    // Clear input immediately
+    // Clear input and update states
     setNewComment('');
     setShowEmojiPicker(false);
     setSubmitting(true);
     setError('');
-    
-    // Keep focus immediately and continuously to prevent keyboard from closing
-    if (shouldKeepFocus && textareaRef.current) {
-      // Focus immediately before any async operations
-      textareaRef.current.focus();
-      
-      // Also use setTimeout to maintain focus after state updates
-      setTimeout(() => {
-        if (textareaRef.current && shouldKeepFocus) {
-          textareaRef.current.focus();
-        }
-      }, 0);
-    }
 
     try {
       const response = await votingApi.addComment(userId, commentText);
@@ -324,27 +323,17 @@ const CommentModal: React.FC<CommentModalProps> = ({
           return [...prev, response.data];
         });
 
-        // Reset textarea height after clearing
+        // Reset textarea height - this function now preserves focus
         resetTextareaHeight();
-
-        // Maintain focus continuously to keep keyboard open on mobile
-        if (shouldKeepFocus && textareaRef.current) {
-          // Use multiple focus attempts to ensure keyboard stays open
-          textareaRef.current.focus();
-          setTimeout(() => {
-            if (textareaRef.current && shouldKeepFocus) {
-              textareaRef.current.focus();
-              textareaRef.current.setSelectionRange(0, 0);
-            }
-          }, 50);
-        }
       } else {
         setError('Không thể thêm bình luận');
+        shouldKeepFocusRef.current = false;
       }
     } catch (err: any) {
       console.error('Error adding comment:', err);
       setError(err.response?.data?.message || 'Không thể thêm bình luận');
       pendingCommentIdRef.current = null;
+      shouldKeepFocusRef.current = false;
     } finally {
       setSubmitting(false);
     }
