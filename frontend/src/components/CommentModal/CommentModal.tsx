@@ -195,6 +195,19 @@ const CommentModal: React.FC<CommentModalProps> = ({
     }
   }, [isOpen, currentUserId]);
 
+  // Keep textarea focused after submission to maintain keyboard open on mobile
+  useEffect(() => {
+    if (!submitting && newComment === '' && textareaRef.current && currentUserId && isOpen) {
+      // When submission completes and input is cleared, ensure textarea stays focused
+      const timer = setTimeout(() => {
+        if (textareaRef.current && document.activeElement !== textareaRef.current) {
+          textareaRef.current.focus();
+        }
+      }, 10);
+      return () => clearTimeout(timer);
+    }
+  }, [submitting, newComment, currentUserId, isOpen]);
+
   // Close emoji picker when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -269,13 +282,33 @@ const CommentModal: React.FC<CommentModalProps> = ({
     e.preventDefault();
     if (!newComment.trim() || submitting || !currentUserId) return;
 
-    // Prevent button from taking focus on mobile to keep keyboard open
-    const wasFocused = document.activeElement === textareaRef.current;
+    // Check if textarea is currently focused to maintain keyboard open
+    const shouldKeepFocus = document.activeElement === textareaRef.current;
+    
+    // Store the comment text before clearing
+    const commentText = newComment.trim();
 
+    // Clear input immediately
+    setNewComment('');
+    setShowEmojiPicker(false);
     setSubmitting(true);
     setError('');
+    
+    // Keep focus immediately and continuously to prevent keyboard from closing
+    if (shouldKeepFocus && textareaRef.current) {
+      // Focus immediately before any async operations
+      textareaRef.current.focus();
+      
+      // Also use setTimeout to maintain focus after state updates
+      setTimeout(() => {
+        if (textareaRef.current && shouldKeepFocus) {
+          textareaRef.current.focus();
+        }
+      }, 0);
+    }
+
     try {
-      const response = await votingApi.addComment(userId, newComment.trim());
+      const response = await votingApi.addComment(userId, commentText);
       if (response.success) {
         // Store the comment ID to track it
         pendingCommentIdRef.current = response.data._id;
@@ -291,23 +324,19 @@ const CommentModal: React.FC<CommentModalProps> = ({
           return [...prev, response.data];
         });
 
-        setNewComment('');
-        setShowEmojiPicker(false);
+        // Reset textarea height after clearing
         resetTextareaHeight();
-        
-        // Keep keyboard open on mobile by refocusing immediately
-        if (wasFocused && textareaRef.current) {
-          // Use requestAnimationFrame to ensure focus happens after state updates
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              if (textareaRef.current) {
-                textareaRef.current.focus();
-                // On mobile, ensure the cursor is at the end
-                const length = textareaRef.current.value.length;
-                textareaRef.current.setSelectionRange(length, length);
-              }
-            });
-          });
+
+        // Maintain focus continuously to keep keyboard open on mobile
+        if (shouldKeepFocus && textareaRef.current) {
+          // Use multiple focus attempts to ensure keyboard stays open
+          textareaRef.current.focus();
+          setTimeout(() => {
+            if (textareaRef.current && shouldKeepFocus) {
+              textareaRef.current.focus();
+              textareaRef.current.setSelectionRange(0, 0);
+            }
+          }, 50);
         }
       } else {
         setError('Không thể thêm bình luận');
