@@ -15,7 +15,7 @@ type LoginMode = 'first-time' | 'registered';
 const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
   const dispatch = useAppDispatch();
   const { loading, error } = useAppSelector((state) => state.voting);
-  
+
   const [mode, setMode] = useState<LoginMode>('registered');
   const [selectedUsername, setSelectedUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -67,9 +67,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const performLogin = async () => {
     if (!selectedUsername) {
       setLocalError('Vui lòng chọn tên người dùng');
       return;
@@ -94,20 +92,36 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
       // For first-time login, password will be set as initial password
       // For subsequent logins, password must match
       const loginResult = await dispatch(loginUser({ username: selectedUsername, password }));
-      
+
       if (loginUser.fulfilled.match(loginResult)) {
         onLoginSuccess();
         onClose();
       } else if (loginUser.rejected.match(loginResult)) {
-        // Login failed - show error message
+        // Login failed - clear password field and show error message
+        setPassword('');
         const errorMessage = loginResult.error?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin đăng nhập';
         setLocalError(errorMessage);
       }
     } catch (err: any) {
+      // Login failed - clear password field
+      setPassword('');
       const errorMessage = err?.message || 'Có lỗi xảy ra. Vui lòng thử lại';
       setLocalError(errorMessage);
     }
   };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await performLogin();
+  };
+
+  // Auto-login when 6 digits are entered
+  useEffect(() => {
+    if (password.length === 6 && selectedUsername && !loading) {
+      performLogin();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [password.length, selectedUsername]);
 
   const handleModeChange = (newMode: LoginMode) => {
     setMode(newMode);
@@ -148,7 +162,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
         >
           ×
         </button>
-        
+
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.modeSelector}>
             <button
@@ -205,24 +219,16 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
               placeholder="Nhập 6 số"
               maxLength={6}
               required
-              disabled={loading}
+              disabled={loading || !selectedUsername}
             />
             <small className={styles.helpText}>
-              {mode === 'first-time' 
+              {mode === 'first-time'
                 ? 'Vui lòng nhập mật khẩu cho lần đăng nhập sau (6 số). Mật khẩu này sẽ được sử dụng cho các lần đăng nhập tiếp theo.'
                 : 'Vui lòng nhập đúng mật khẩu khi bạn vào lần đầu (6 số).'}
             </small>
           </div>
 
           {displayError && <div className={styles.error}>{displayError}</div>}
-
-          <button 
-            type="submit" 
-            className={styles.submitButton}
-            disabled={loading}
-          >
-            {loading ? 'Đang xử lý...' : 'Tiếp tục'}
-          </button>
         </form>
       </div>
     </div>

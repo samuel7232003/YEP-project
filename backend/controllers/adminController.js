@@ -1,4 +1,7 @@
 const User = require("../models/User");
+const Config = require("../models/Config");
+const cloudinary = require("../config/cloudinary");
+const { Readable } = require("stream");
 
 const getAllUsers = async (req, res) => {
   try {
@@ -145,8 +148,133 @@ const updateUser = async (req, res) => {
   }
 };
 
+const uploadAvatar = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng chọn file ảnh",
+      });
+    }
+
+    // Convert buffer to stream for Cloudinary
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: "avatars",
+        resource_type: "image",
+      },
+      (error, result) => {
+        if (error) {
+          console.log("Cloudinary upload error:", error);
+          return res.status(500).json({
+            success: false,
+            message: "Lỗi khi upload ảnh lên Cloudinary",
+          });
+        }
+
+        res.status(200).json({
+          success: true,
+          data: {
+            imageUrl: result.secure_url,
+          },
+        });
+      }
+    );
+
+    // Pipe buffer to stream
+    const bufferStream = new Readable();
+    bufferStream.push(req.file.buffer);
+    bufferStream.push(null);
+    bufferStream.pipe(stream);
+  } catch (error) {
+    console.log("Upload avatar error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Lỗi khi upload avatar",
+    });
+  }
+};
+
+const getConfig = async (req, res) => {
+  try {
+    const config = await Config.getConfig();
+    res.status(200).json({
+      success: true,
+      data: config,
+    });
+  } catch (error) {
+    console.log("Get config error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Lỗi khi lấy cấu hình",
+    });
+  }
+};
+
+const getPublicConfig = async (req, res) => {
+  try {
+    const config = await Config.getConfig();
+    // Chỉ trả về các field public (không cần admin auth)
+    res.status(200).json({
+      success: true,
+      data: {
+        maxVotesPerUser: config.maxVotesPerUser || 3,
+        showVoters: config.showVoters !== undefined ? config.showVoters : true,
+      },
+    });
+  } catch (error) {
+    console.log("Get public config error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Lỗi khi lấy cấu hình",
+    });
+  }
+};
+
+const updateConfig = async (req, res) => {
+  try {
+    const { showVoters, maxVotesPerUser } = req.body;
+
+    const config = await Config.getConfig();
+
+    // Validate maxVotesPerUser if provided
+    if (maxVotesPerUser !== undefined) {
+      if (typeof maxVotesPerUser !== "number" || maxVotesPerUser < 1 || maxVotesPerUser > 100) {
+        return res.status(400).json({
+          success: false,
+          message: "Số vote tối đa phải là số từ 1 đến 100",
+        });
+      }
+      config.maxVotesPerUser = maxVotesPerUser;
+    }
+
+    // Update showVoters if provided
+    if (showVoters !== undefined) {
+      config.showVoters = Boolean(showVoters);
+    }
+
+    await config.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Cập nhật cấu hình thành công",
+      data: config,
+    });
+  } catch (error) {
+    console.log("Update config error:", error);
+    res.status(400).json({
+      success: false,
+      message: error.message || "Cập nhật cấu hình thất bại",
+    });
+  }
+};
+
 module.exports = {
   getAllUsers,
   createUser,
   updateUser,
+  uploadAvatar,
+  getConfig,
+  updateConfig,
+  getPublicConfig,
 };

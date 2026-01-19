@@ -148,6 +148,17 @@ const initDefaultUsers = async (req, res) => {
 
 const getVoters = async (req, res) => {
   try {
+    const Config = require("../models/Config");
+    const config = await Config.getConfig();
+
+    // If showVoters is false, return empty array
+    if (!config.showVoters) {
+      return res.status(200).json({
+        success: true,
+        data: [],
+      });
+    }
+
     const { id } = req.params;
     const voters = await getVotersForUser(id);
     res.status(200).json({

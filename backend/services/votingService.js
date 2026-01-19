@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const Vote = require("../models/Vote");
+const Config = require("../models/Config");
 
 const getAllVotingUsers = async () => {
   const users = await User.find({ name: { $exists: true, $ne: null } }).sort({
@@ -56,10 +57,14 @@ const voteForUser = async (userId, votedForId) => {
     await updateVoteCounts();
     return { action: "removed", votes: await getUserVotes(userId) };
   } else {
-    // Check if user has reached max votes (3)
+    // Get config to check max votes
+    const config = await Config.getConfig();
+    const maxVotes = config.maxVotesPerUser || 3;
+
+    // Check if user has reached max votes
     const userVoteCount = await Vote.countDocuments({ voter: userId });
-    if (userVoteCount >= 3) {
-      throw new Error("Bạn đã đạt tối đa 3 votes");
+    if (userVoteCount >= maxVotes) {
+      throw new Error(`Bạn đã đạt tối đa ${maxVotes} votes`);
     }
 
     // Get user

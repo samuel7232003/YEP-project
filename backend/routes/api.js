@@ -31,12 +31,23 @@ const {
   initDefaultUsers,
   getVoters,
 } = require("../controllers/votingController");
+const {
+  getComments,
+  addComment,
+  getUnreadCount,
+  markAsRead,
+  removeComment,
+} = require("../controllers/commentController");
 const { authenticate } = require("../middleware/authMiddleware");
 const { adminAuth } = require("../middleware/adminAuthMiddleware");
 const {
   getAllUsers,
   createUser: createAdminUser,
   updateUser: updateAdminUser,
+  uploadAvatar: uploadAdminAvatar,
+  getConfig,
+  updateConfig,
+  getPublicConfig,
 } = require("../controllers/adminController");
 const routerAPI = express.Router();
 
@@ -65,10 +76,26 @@ routerAPI.get("/voting/my-votes", authenticate, getMyVotes);
 routerAPI.post("/voting/vote", authenticate, vote);
 routerAPI.post("/voting/init-default-users", initDefaultUsers);
 routerAPI.get("/voting/users/:id/voters", getVoters);
+routerAPI.get("/voting/config", require("../controllers/adminController").getPublicConfig);
+
+// Comment routes
+routerAPI.get("/voting/users/:userId/comments", getComments);
+routerAPI.post("/voting/users/:userId/comments", authenticate, addComment);
+routerAPI.delete("/voting/comments/:commentId", authenticate, removeComment);
+routerAPI.get("/voting/users/:userId/comments/unread-count", authenticate, getUnreadCount);
+routerAPI.post("/voting/users/:userId/comments/mark-read", authenticate, markAsRead);
 
 // Admin routes
 routerAPI.get("/admin/users", adminAuth, getAllUsers);
 routerAPI.post("/admin/users", adminAuth, createAdminUser);
 routerAPI.put("/admin/users/:id", adminAuth, updateAdminUser);
+routerAPI.post(
+  "/admin/upload-avatar",
+  adminAuth,
+  upload.single("avatar"),
+  uploadAdminAvatar
+);
+routerAPI.get("/admin/config", adminAuth, getConfig);
+routerAPI.put("/admin/config", adminAuth, updateConfig);
 
 module.exports = routerAPI;

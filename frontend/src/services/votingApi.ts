@@ -14,6 +14,31 @@ export interface Voter {
   image: string;
 }
 
+export interface CommentAuthor {
+  _id: string;
+  name: string;
+  image: string;
+}
+
+export interface Comment {
+  _id: string;
+  author: CommentAuthor;
+  targetUser: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface CommentsResponse {
+  success: boolean;
+  data: Comment[];
+}
+
+export interface AddCommentResponse {
+  success: boolean;
+  message: string;
+  data: Comment;
+}
+
 export interface AuthResponse {
   success: boolean;
   message: string;
@@ -67,6 +92,19 @@ export interface UpdateUserResponse {
   success: boolean;
   message: string;
   data: AdminUser;
+}
+
+export interface VotingConfig {
+  _id: string;
+  showVoters: boolean;
+  maxVotesPerUser: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ConfigResponse {
+  success: boolean;
+  data: VotingConfig;
 }
 
 export const votingApi = {
@@ -127,8 +165,39 @@ export const votingApi = {
     return response.data;
   },
 
+  getPublicConfig: async (): Promise<ConfigResponse> => {
+    const response = await axiosInstance.get('/voting/config');
+    return response.data;
+  },
+
   initDefaultUsers: async (): Promise<{ success: boolean; message: string }> => {
     const response = await axiosInstance.post('/voting/init-default-users');
+    return response.data;
+  },
+
+  // Comments
+  getComments: async (userId: string): Promise<CommentsResponse> => {
+    const response = await axiosInstance.get(`/voting/users/${userId}/comments`);
+    return response.data;
+  },
+
+  addComment: async (userId: string, content: string): Promise<AddCommentResponse> => {
+    const response = await axiosInstance.post(`/voting/users/${userId}/comments`, { content });
+    return response.data;
+  },
+
+  getUnreadCommentCount: async (userId: string): Promise<{ success: boolean; data: { unreadCount: number } }> => {
+    const response = await axiosInstance.get(`/voting/users/${userId}/comments/unread-count`);
+    return response.data;
+  },
+
+  markCommentsAsRead: async (userId: string): Promise<{ success: boolean; message: string }> => {
+    const response = await axiosInstance.post(`/voting/users/${userId}/comments/mark-read`);
+    return response.data;
+  },
+
+  deleteComment: async (commentId: string): Promise<{ success: boolean; message: string }> => {
+    const response = await axiosInstance.delete(`/voting/comments/${commentId}`);
     return response.data;
   },
 
@@ -189,6 +258,49 @@ export const votingApi = {
       data,
       { headers }
     );
+    return response.data;
+  },
+
+  uploadAdminAvatar: async (
+    formData: FormData,
+    adminPassword?: string
+  ): Promise<{ success: boolean; data: { imageUrl: string } }> => {
+    const headers: Record<string, string> = {
+      'Content-Type': 'multipart/form-data',
+    };
+    if (adminPassword) {
+      const credentials = btoa(`admin:${adminPassword}`);
+      headers.Authorization = `Basic ${credentials}`;
+    }
+    const response = await axiosInstance.post('/admin/upload-avatar', formData, {
+      headers,
+    });
+    return response.data;
+  },
+
+  getConfig: async (adminPassword: string): Promise<ConfigResponse> => {
+    const credentials = btoa(`admin:${adminPassword}`);
+    const response = await axiosInstance.get('/admin/config', {
+      headers: {
+        Authorization: `Basic ${credentials}`,
+      },
+    });
+    return response.data;
+  },
+
+  updateConfig: async (
+    data: {
+      showVoters?: boolean;
+      maxVotesPerUser?: number;
+    },
+    adminPassword: string
+  ): Promise<ConfigResponse> => {
+    const credentials = btoa(`admin:${adminPassword}`);
+    const response = await axiosInstance.put('/admin/config', data, {
+      headers: {
+        Authorization: `Basic ${credentials}`,
+      },
+    });
     return response.data;
   },
 };

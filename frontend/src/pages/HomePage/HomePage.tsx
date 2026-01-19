@@ -10,6 +10,7 @@ import {
   setUsers,
 } from "../../store/slices/votingSlice";
 import { socketService } from "../../services/socketService";
+import { votingApi } from "../../services/votingApi";
 import UserCard from "../../components/UserCard/UserCard";
 import LoginModal from "../../components/LoginModal/LoginModal";
 import EditProfileModal from "../../components/EditProfileModal/EditProfileModal";
@@ -34,7 +35,8 @@ const HomePage = () => {
   const [votingUserId, setVotingUserId] = useState<string | null>(null);
   const [highlightedUsers, setHighlightedUsers] = useState<Set<string>>(new Set());
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  
+  const [maxVotesPerUser, setMaxVotesPerUser] = useState<number>(3);
+
   const previousRanksRef = useRef<Map<string, UserRank>>(new Map());
   const cardRefsRef = useRef<Map<string, HTMLDivElement>>(new Map());
   const previousPositionsRef = useRef<Map<string, { top: number; left: number }>>(new Map());
@@ -42,6 +44,7 @@ const HomePage = () => {
   const unfreezeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isRankingFrozenRef = useRef(false);
   const pendingRankChangesRef = useRef<Map<string, { oldRank: number; newRank: number }>>(new Map());
+  const updateDebounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     // Load user from localStorage on mount
@@ -49,6 +52,19 @@ const HomePage = () => {
 
     // Fetch users
     dispatch(fetchUsers());
+
+    // Fetch config
+    const fetchConfig = async () => {
+      try {
+        const response = await votingApi.getPublicConfig();
+        if (response.success && response.data.maxVotesPerUser) {
+          setMaxVotesPerUser(response.data.maxVotesPerUser);
+        }
+      } catch (error) {
+        console.error('Error fetching config:', error);
+      }
+    };
+    fetchConfig();
 
     // Initialize positions after first render
     return () => {
@@ -79,7 +95,7 @@ const HomePage = () => {
       }
       return usersWithHigherVotes + 1;
     };
-    
+
     return sorted.map((user, index) => {
       const rank = calculateRankForIndex(index);
       return { ...user, rank };
@@ -89,13 +105,13 @@ const HomePage = () => {
   // Check if current logged-in user is dangerous (rank 1 with votes > 0)
   const isCurrentUserDangerous = useMemo(() => {
     if (!currentUser || !userProfile?._id) return false;
-    
+
     const currentLoggedInUser = sortedUsersWithRanks.find(
       (user) => user.id === userProfile._id || user._id === userProfile._id
     );
-    
+
     if (!currentLoggedInUser) return false;
-    
+
     // Check if user is rank 1 with votes > 0
     return currentLoggedInUser.rank === 1 && currentLoggedInUser.voteCount > 0;
   }, [sortedUsersWithRanks, currentUser, userProfile]);
@@ -181,10 +197,10 @@ const HomePage = () => {
     // Only animate if not frozen and there are rank changes
     const hasPendingChanges = pendingRankChangesRef.current.size > 0;
     const shouldAnimate = !isRankingFrozenRef.current && (rankChangedUsers.size > 0 || hasPendingChanges);
-    
+
     if (shouldAnimate && previousPositionsRef.current.size > 0) {
       isAnimatingRef.current = true;
-      
+
       // FLIP Animation: Get new positions after DOM update (LAST)
       const newPositions = new Map<string, { top: number; left: number }>();
       cardRefsRef.current.forEach((element, userId) => {
@@ -203,14 +219,14 @@ const HomePage = () => {
       // FLIP Animation: Calculate deltas and apply transforms (INVERT)
       cardRefsRef.current.forEach((element, userId) => {
         if (!element) return;
-        
+
         const oldPos = previousPositionsRef.current.get(userId);
         const newPos = newPositions.get(userId);
-        
+
         if (oldPos && newPos && (oldPos.top !== newPos.top || oldPos.left !== newPos.left)) {
           const deltaY = oldPos.top - newPos.top;
           const deltaX = oldPos.left - newPos.left;
-          
+
           // INVERT: Apply transform to move from old position
           // This makes the element appear to stay in place visually
           element.style.transition = 'none';
@@ -225,16 +241,16 @@ const HomePage = () => {
         requestAnimationFrame(() => {
           cardRefsRef.current.forEach((element, userId) => {
             if (!element) return;
-            
+
             const oldPos = previousPositionsRef.current.get(userId);
             const newPos = newPositions.get(userId);
-            
+
             if (oldPos && newPos && (oldPos.top !== newPos.top || oldPos.left !== newPos.left)) {
               // PLAY: Remove transform to animate to new position
               // This creates the smooth animation effect
               element.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
               element.style.transform = 'translate(0, 0)';
-              
+
               // Cleanup after animation completes
               setTimeout(() => {
                 if (element) {
@@ -259,7 +275,7 @@ const HomePage = () => {
     // Highlight changed users (even when frozen, to show vote count updates)
     if (changedUsers.size > 0) {
       setHighlightedUsers(changedUsers);
-      
+
       // Remove highlight after animation
       setTimeout(() => {
         setHighlightedUsers(new Set());
@@ -272,20 +288,19 @@ const HomePage = () => {
     // Connect to WebSocket
     const socket = socketService.connect();
 
-    // Listen for users updates
-    const handleUsersUpdate = (updatedUsers: any[]) => {
-      // Transform users data to match Redux state format
-      const formattedUsers = updatedUsers.map((user) => ({
-        _id: user._id,
-        id: user._id,
-        name: user.name,
-        image: user.image,
-        voteCount: user.voteCount,
-        status: user.status,
-      }));
-      
-      // Update Redux store with new users data
-      dispatch(setUsers(formattedUsers));
+    // Listen for users updates with debounce logic
+    const handleUsersUpdate = () => {
+      // Clear existing timeout if any
+      if (updateDebounceTimeoutRef.current) {
+        clearTimeout(updateDebounceTimeoutRef.current);
+      }
+
+      // Set new timeout to fetch latest data after 3 seconds
+      updateDebounceTimeoutRef.current = setTimeout(() => {
+        // Fetch the most recent data after waiting period
+        dispatch(fetchUsers());
+        updateDebounceTimeoutRef.current = null;
+      }, 3000);
     };
 
     socket.on('usersUpdated', handleUsersUpdate);
@@ -293,6 +308,10 @@ const HomePage = () => {
     // Cleanup on unmount
     return () => {
       socket.off('usersUpdated', handleUsersUpdate);
+      if (updateDebounceTimeoutRef.current) {
+        clearTimeout(updateDebounceTimeoutRef.current);
+        updateDebounceTimeoutRef.current = null;
+      }
       // Don't disconnect socket here as it might be used by other components
       // socketService.disconnect();
     };
@@ -303,6 +322,9 @@ const HomePage = () => {
     return () => {
       if (unfreezeTimeoutRef.current) {
         clearTimeout(unfreezeTimeoutRef.current);
+      }
+      if (updateDebounceTimeoutRef.current) {
+        clearTimeout(updateDebounceTimeoutRef.current);
       }
     };
   }, []);
@@ -331,12 +353,12 @@ const HomePage = () => {
 
   const handleFreezeRanking = () => {
     isRankingFrozenRef.current = true;
-    
+
     // Clear existing timeout
     if (unfreezeTimeoutRef.current) {
       clearTimeout(unfreezeTimeoutRef.current);
     }
-    
+
     // Unfreeze after 2.5 seconds of no interaction
     // When unfreezing, any pending rank changes will animate smoothly
     unfreezeTimeoutRef.current = setTimeout(() => {
@@ -355,14 +377,14 @@ const HomePage = () => {
           }
         }
       });
-      
+
       if (currentPositions.size > 0) {
         previousPositionsRef.current = currentPositions;
       }
-      
+
       isRankingFrozenRef.current = false;
       unfreezeTimeoutRef.current = null;
-      
+
       // Force a re-check by triggering a state update
       // This will cause useLayoutEffect to run and animate pending changes
       // We use a small delay to ensure DOM has updated
@@ -421,8 +443,8 @@ const HomePage = () => {
   const canVote = (userId: string): boolean => {
     if (!currentUser) return false;
     const isVoted = userVotes.includes(userId);
-    // Can vote if: not voted and has less than 3 votes, or already voted (can unvote)
-    return isVoted || userVotes.length < 3;
+    // Can vote if: not voted and has less than maxVotesPerUser votes, or already voted (can unvote)
+    return isVoted || userVotes.length < maxVotesPerUser;
   };
 
   const getDangerLevelClass = (
@@ -622,10 +644,10 @@ const HomePage = () => {
               <span className={styles.userName}>{currentUser}</span>
             </div>
             <span className={styles.voteInfo}>
-              ({userVotes.length}/3 votes)
+              ({userVotes.length}/{maxVotesPerUser} votes)
             </span>
           </div>
-        ):(
+        ) : (
           <button
             className={styles.loginButton}
             onClick={() => setIsLoginModalOpen(true)}
@@ -647,7 +669,7 @@ const HomePage = () => {
         <div className={styles.loading}>Đang tải...</div>
       )}
 
-      <div 
+      <div
         className={styles.userList}
         onMouseEnter={handleFreezeRanking}
         onFocus={handleFreezeRanking}
@@ -695,6 +717,7 @@ const HomePage = () => {
                 dangerLevel={dangerLevel}
                 onScrollToUser={handleScrollToUser}
                 status={user.status}
+                onLoginClick={() => setIsLoginModalOpen(true)}
               >
                 <span
                   className={`${styles.rank} ${dangerLevelClass} ${rankChanged ? styles.rankAnimation : ''}`}
@@ -720,9 +743,9 @@ const HomePage = () => {
         currentProfile={
           userProfile
             ? {
-                name: userProfile.name,
-                image: userProfile.image,
-              }
+              name: userProfile.name,
+              image: userProfile.image,
+            }
             : null
         }
       />

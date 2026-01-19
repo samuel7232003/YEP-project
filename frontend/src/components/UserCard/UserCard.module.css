@@ -1,6 +1,7 @@
 .card {
-  background-color: var(--color-background-primary);
-  border: 3px solid var(--color-logo-white);
+  background-color: rgba(255, 255, 255, 0.613);
+  backdrop-filter: blur(10px);
+  border: 2px solid #ffffffac;
   border-radius: var(--border-radius-lg);
   padding: var(--spacing-lg);
   display: flex;
@@ -10,27 +11,11 @@
   transition: all 0.3s ease;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1);
   position: relative;
-  background: linear-gradient(
-    135deg,
-    var(--color-background-primary) 0%,
-    var(--color-gray-light) 100%
-  );
 }
 
 .card:hover {
-  border-color: var(--color-logo-brown);
   box-shadow: 0 6px 12px rgba(139, 111, 71, 0.3), 0 4px 8px rgba(0, 0, 0, 0.2);
   transform: translateY(-4px);
-  background: linear-gradient(
-    135deg,
-    var(--color-background-primary) 0%,
-    var(--color-gray-lighter) 100%
-  );
-}
-
-.card:focus {
-  outline: 3px solid var(--color-logo-brown);
-  outline-offset: 2px;
 }
 
 .card.voted {
@@ -40,25 +25,46 @@
 
 .card.dangerous {
   border-color: var(--color-error);
-  background: linear-gradient(
-    135deg,
-    var(--color-danger-light) 0%,
-    var(--color-danger-lighter) 100%
-  );
+  background-image: url('../../assets/images/first.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   box-shadow: 0 4px 12px rgba(211, 47, 47, 0.4),
     0 2px 6px rgba(211, 47, 47, 0.3);
   animation: pulse-danger 2s ease-in-out infinite;
+  height: 400px;
+  padding: 20px 40px;
+
+  @media screen and (max-width: 768px) {
+    flex-direction: column;
+  }
+}
+
+.card.dangerous .imageContainer {
+  width: 50%;
+  height: 100%;
+  min-width: auto;
+  border-radius: 20px;
+
+  @media screen and (max-width: 768px) {
+    width: 100%;
+    height: 50%;
+  }
+}
+
+.card.dangerous .imageWrapper {
+  border-radius: 20px;
+}
+
+.card.dangerous h3,
+.card.dangerous span {
+  color: #fff;
 }
 
 .card.dangerous:hover {
   border-color: var(--color-error-darker);
   box-shadow: 0 6px 16px rgba(211, 47, 47, 0.5),
     0 4px 10px rgba(211, 47, 47, 0.4);
-  background: linear-gradient(
-    135deg,
-    var(--color-danger-lighter) 0%,
-    var(--color-danger-lightest) 100%
-  );
 }
 
 @keyframes pulse-danger {
@@ -171,8 +177,14 @@
   color: var(--color-logo-brown);
 }
 
+.buttonGroup {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
 .voteButton {
-  padding: var(--spacing-sm) var(--spacing-lg);
+  padding: var(--spacing-sm) 0;
   background-color: var(--color-logo-brown);
   color: var(--color-logo-white);
   border: 2px solid var(--color-logo-brown-dark);
@@ -181,8 +193,12 @@
   font-weight: var(--font-weight-medium);
   cursor: pointer;
   transition: all 0.3s ease;
-  width: 150px;
+  width: 140px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .voteButton:hover:not(.disabled) {
@@ -216,6 +232,42 @@
   color: var(--color-text-primary);
   cursor: not-allowed;
   opacity: 0.6;
+}
+
+.commentButton {
+  padding: var(--spacing-sm) 0;
+  background-color: var(--color-background-secondary);
+  color: var(--color-text-primary);
+  border: 2px solid var(--color-background-secondary);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 140px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  gap: 6px;
+}
+
+.commentButton:hover {
+  background-color: var(--color-background-tertiary);
+  border-color: var(--color-logo-brown);
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(139, 111, 71, 0.3);
+}
+
+.commentButton:focus {
+  outline: 2px solid var(--color-logo-brown);
+  outline-offset: 2px;
+}
+
+.commentButton:active {
+  transform: scale(0.98);
 }
 
 .votersContainer {
@@ -272,4 +324,39 @@
 
 .remainingCountText {
   font-size: var(--font-size-sm);
+}
+
+.commentButtonWrapper {
+  position: relative;
+  width: 140px;
+}
+
+.unreadDot {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 12px;
+  height: 12px;
+  background-color: var(--color-error);
+  border-radius: 50%;
+  border: 2px solid var(--color-background-primary);
+  z-index: 10;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+.buttonIcon {
+  font-size: 14px;
+  flex-shrink: 0;
 }

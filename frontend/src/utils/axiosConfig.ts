@@ -13,10 +13,12 @@ const axiosInstance = axios.create({
 // Request interceptor
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Thêm token vào header nếu có
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Chỉ thêm Bearer token nếu chưa có Authorization header (để tránh override Basic Auth)
+    if (!config.headers.Authorization) {
+      const token = localStorage.getItem('token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },
@@ -35,7 +37,7 @@ axiosInstance.interceptors.response.use(
     if (error.response) {
       // Server responded with error status
       console.error('API Error:', error.response.data);
-      
+
       // Lấy message từ server response nếu có
       const serverMessage = error.response.data?.message;
       if (serverMessage) {
@@ -45,7 +47,7 @@ axiosInstance.interceptors.response.use(
         (customError as any).status = error.response.status;
         return Promise.reject(customError);
       }
-      
+
       // Nếu không có message từ server, tạo message tiếng Việt dựa trên status code
       let errorMessage = 'Đã xảy ra lỗi';
       switch (error.response.status) {
@@ -69,7 +71,7 @@ axiosInstance.interceptors.response.use(
         default:
           errorMessage = 'Đã xảy ra lỗi. Vui lòng thử lại';
       }
-      
+
       const customError = new Error(errorMessage);
       (customError as any).response = error.response;
       (customError as any).status = error.response.status;
