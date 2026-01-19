@@ -217,6 +217,10 @@ const CommentModal: React.FC<CommentModalProps> = ({
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
+      // On mobile, blur textarea to close keyboard when clicking outside
+      if (textareaRef.current && document.activeElement === textareaRef.current) {
+        textareaRef.current.blur();
+      }
       onClose();
     }
   };
@@ -265,6 +269,9 @@ const CommentModal: React.FC<CommentModalProps> = ({
     e.preventDefault();
     if (!newComment.trim() || submitting || !currentUserId) return;
 
+    // Prevent button from taking focus on mobile to keep keyboard open
+    const wasFocused = document.activeElement === textareaRef.current;
+
     setSubmitting(true);
     setError('');
     try {
@@ -287,10 +294,21 @@ const CommentModal: React.FC<CommentModalProps> = ({
         setNewComment('');
         setShowEmojiPicker(false);
         resetTextareaHeight();
-        // Focus back to textarea after successful submission
-        setTimeout(() => {
-          textareaRef.current?.focus();
-        }, 0);
+        
+        // Keep keyboard open on mobile by refocusing immediately
+        if (wasFocused && textareaRef.current) {
+          // Use requestAnimationFrame to ensure focus happens after state updates
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              if (textareaRef.current) {
+                textareaRef.current.focus();
+                // On mobile, ensure the cursor is at the end
+                const length = textareaRef.current.value.length;
+                textareaRef.current.setSelectionRange(length, length);
+              }
+            });
+          });
+        }
       } else {
         setError('Không thể thêm bình luận');
       }
@@ -644,6 +662,18 @@ const CommentModal: React.FC<CommentModalProps> = ({
                 className={styles.submitButton}
                 disabled={!newComment.trim() || submitting || newComment.length > 500}
                 aria-label="Gửi bình luận"
+                onMouseDown={(e) => {
+                  // Prevent button from taking focus on mobile to keep keyboard open
+                  if (document.activeElement === textareaRef.current) {
+                    e.preventDefault();
+                  }
+                }}
+                onTouchStart={(e) => {
+                  // Prevent button from taking focus on mobile touch to keep keyboard open
+                  if (document.activeElement === textareaRef.current) {
+                    e.preventDefault();
+                  }
+                }}
               >
                 {submitting ? 'Đang gửi...' : 'Gửi'}
               </button>
