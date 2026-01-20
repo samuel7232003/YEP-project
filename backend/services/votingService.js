@@ -3,14 +3,16 @@ const Vote = require("../models/Vote");
 const Config = require("../models/Config");
 
 const getAllVotingUsers = async () => {
-  const users = await User.find({ name: { $exists: true, $ne: null } }).sort({
-    voteCount: -1,
-  });
+  const users = await User.find({ name: { $exists: true, $ne: null } })
+    .select("-password")
+    .sort({
+      voteCount: -1,
+    });
   return users;
 };
 
 const getVotingUserById = async (userId) => {
-  const user = await User.findById(userId);
+  const user = await User.findById(userId).select("-password");
   if (!user) {
     throw new Error("Không tìm thấy người dùng");
   }
@@ -23,7 +25,9 @@ const createVotingUser = async (name, image) => {
     image: image || "https://via.placeholder.com/150",
   });
   await user.save();
-  return user;
+  const userObject = user.toObject();
+  delete userObject.password;
+  return userObject;
 };
 
 const getUserVotes = async (userId) => {

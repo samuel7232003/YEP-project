@@ -229,6 +229,12 @@ const CommentModal: React.FC<CommentModalProps> = ({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Don't handle keyboard events if the target is an input or textarea
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+      return;
+    }
+
     if (e.key === 'Escape') {
       if (showEmojiPicker) {
         setShowEmojiPicker(false);
@@ -239,6 +245,9 @@ const CommentModal: React.FC<CommentModalProps> = ({
   };
 
   const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Stop propagation to prevent overlay from interfering with textarea input
+    e.stopPropagation();
+    
     // Submit on Enter (but not Shift+Enter)
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
