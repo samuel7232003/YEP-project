@@ -30,6 +30,7 @@ const registerUser = async (username, password) => {
   const user = new User({
     username,
     password: password,
+    isResetPassword: false, // New users don't need to reset password
   });
 
   await user.save();
@@ -63,6 +64,8 @@ const loginUser = async (username, password) => {
   if (!user.password) {
     // Save the password to database (plain text)
     user.password = password;
+    // New users don't need to reset password
+    user.isResetPassword = false;
     await user.save();
 
     // Generate token for user
@@ -81,6 +84,13 @@ const loginUser = async (username, password) => {
   // User has password, validate it by direct comparison
   if (password !== user.password) {
     throw new Error("Mật khẩu không đúng");
+  }
+
+  // Set isResetPassword to true for existing users who haven't reset yet
+  // This ensures all existing users need to reset their password
+  if (user.isResetPassword === undefined || user.isResetPassword === null) {
+    user.isResetPassword = true;
+    await user.save();
   }
 
   // Generate token
@@ -102,6 +112,29 @@ const getUserById = async (userId) => {
     throw new Error("Không tìm thấy người dùng");
   }
   return user;
+};
+
+const resetPassword = async (userId, newPassword) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new Error("Không tìm thấy người dùng");
+  }
+
+  // Validate password format (6 digits)
+  if (!/^\d{6}$/.test(newPassword)) {
+    throw new Error("Mật khẩu phải gồm 6 số");
+  }
+
+  // Update password and set isResetPassword to false
+  user.password = newPassword;
+  user.isResetPassword = false;
+  await user.save();
+
+  // Return user without password
+  const userObject = user.toObject();
+  delete userObject.password;
+
+  return userObject;
 };
 
 const updateUserProfile = async (userId, updateData) => {
@@ -126,6 +159,11 @@ const updateUserProfile = async (userId, updateData) => {
       throw new Error("Mật khẩu phải gồm 6 số");
     }
     user.password = updateData.password;
+    // When password is updated through profile, don't force reset
+    // Only reset flag if explicitly set
+    if (updateData.isResetPassword !== undefined) {
+      user.isResetPassword = updateData.isResetPassword;
+    }
   }
 
   await user.save();
@@ -144,4 +182,5 @@ module.exports = {
   loginUser,
   getUserById,
   updateUserProfile,
+  resetPassword,
 };

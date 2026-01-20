@@ -3,6 +3,7 @@ const {
   loginUser,
   getUserById,
   updateUserProfile,
+  resetPassword,
 } = require("../services/authService");
 const cloudinary = require("../config/cloudinary");
 const { Readable } = require("stream");
@@ -189,6 +190,42 @@ const uploadAvatar = async (req, res) => {
   }
 };
 
+const resetUserPassword = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { newPassword } = req.body;
+
+    // Validation
+    if (!newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng nhập mật khẩu mới",
+      });
+    }
+
+    if (!/^\d{6}$/.test(newPassword)) {
+      return res.status(400).json({
+        success: false,
+        message: "Mật khẩu phải gồm 6 số",
+      });
+    }
+
+    const updatedUser = await resetPassword(userId, newPassword);
+
+    res.status(200).json({
+      success: true,
+      message: "Đặt lại mật khẩu thành công",
+      data: updatedUser,
+    });
+  } catch (error) {
+    console.log("Reset password error:", error);
+    res.status(400).json({
+      success: false,
+      message: error.message || "Đặt lại mật khẩu thất bại",
+    });
+  }
+};
+
 const updateProfile = async (req, res) => {
   try {
     const userId = req.userId;
@@ -238,4 +275,5 @@ module.exports = {
   getUsernames,
   uploadAvatar,
   updateProfile,
+  resetUserPassword,
 };

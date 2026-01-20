@@ -32,6 +32,10 @@ const userSchema = mongoose.Schema(
       trim: true,
       maxlength: [30, "Trạng thái không được vượt quá 20 ký tự"],
     },
+    isResetPassword: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

@@ -15,6 +15,7 @@ import UserCard from "../../components/UserCard/UserCard";
 import LoginModal from "../../components/LoginModal/LoginModal";
 import EditProfileModal from "../../components/EditProfileModal/EditProfileModal";
 import StatusModal from "../../components/StatusModal/StatusModal";
+import ResetPasswordModal from "../../components/ResetPasswordModal/ResetPasswordModal";
 import styles from "./HomePage.module.css";
 
 interface UserRank {
@@ -31,6 +32,7 @@ const HomePage = () => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [votingUserId, setVotingUserId] = useState<string | null>(null);
   const [highlightedUsers, setHighlightedUsers] = useState<Set<string>>(new Set());
@@ -81,6 +83,15 @@ const HomePage = () => {
       dispatch(fetchUserProfile());
     }
   }, [currentUser, dispatch]);
+
+  useEffect(() => {
+    // Show reset password modal if user needs to reset password
+    if (currentUser && userProfile?.isResetPassword === true) {
+      setIsResetPasswordModalOpen(true);
+    } else {
+      setIsResetPasswordModalOpen(false);
+    }
+  }, [currentUser, userProfile]);
 
   // Calculate sorted users and ranks
   const sortedUsersWithRanks = useMemo(() => {
@@ -440,6 +451,11 @@ const HomePage = () => {
     setSelectedUserId(null);
   };
 
+  const handleResetPasswordSuccess = async () => {
+    setIsResetPasswordModalOpen(false);
+    // Profile will be refreshed automatically by the ResetPasswordModal
+  };
+
   const canVote = (userId: string): boolean => {
     if (!currentUser) return false;
     const isVoted = userVotes.includes(userId);
@@ -755,6 +771,13 @@ const HomePage = () => {
         onClose={() => setIsStatusModalOpen(false)}
         onUpdateSuccess={handleUpdateProfileSuccess}
         currentStatus={userProfile?.status}
+      />
+
+      <ResetPasswordModal
+        isOpen={isResetPasswordModalOpen}
+        onClose={() => setIsResetPasswordModalOpen(false)}
+        onResetSuccess={handleResetPasswordSuccess}
+        preventClose={true}
       />
     </div>
   );

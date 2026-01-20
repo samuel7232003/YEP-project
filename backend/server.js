@@ -28,6 +28,31 @@ app.use("/api", apiRoutes);
 app.set("io", io);
 
 const { initializeDefaultUsers } = require("./services/votingService");
+const User = require("./models/User");
+
+// Migration: Set isResetPassword=true for all existing users with passwords
+const migrateExistingUsers = async () => {
+  try {
+    const result = await User.updateMany(
+      {
+        password: { $exists: true, $ne: null, $ne: "" },
+        $or: [
+          { isResetPassword: { $exists: false } },
+          { isResetPassword: null },
+          { isResetPassword: false },
+        ],
+      },
+      {
+        $set: { isResetPassword: true },
+      }
+    );
+    if (result.modifiedCount > 0) {
+      console.log(`Migration: Set isResetPassword=true for ${result.modifiedCount} existing users`);
+    }
+  } catch (error) {
+    console.log("Error migrating existing users:", error.message);
+  }
+};
 
 // Socket.io connection handling
 io.on("connection", (socket) => {
@@ -48,6 +73,13 @@ const startServer = async () => {
       console.log("Default voting users initialized");
     } catch (error) {
       console.log("Error initializing default users:", error.message);
+    }
+
+    // Migrate existing users to set isResetPassword=true
+    try {
+      await migrateExistingUsers();
+    } catch (error) {
+      console.log("Error migrating existing users:", error.message);
     }
 
     server.listen(port, () => {

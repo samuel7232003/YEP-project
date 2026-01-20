@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { loginUser, clearError } from '../../store/slices/votingSlice';
+import { loginUser, clearError, fetchUserProfile } from '../../store/slices/votingSlice';
 import { votingApi } from '../../services/votingApi';
+import ResetPasswordModal from '../ResetPasswordModal/ResetPasswordModal';
 import styles from './LoginModal.module.css';
 
 interface LoginModalProps {
@@ -21,12 +22,14 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
   const [password, setPassword] = useState('');
   const [localError, setLocalError] = useState('');
   const [usernames, setUsernames] = useState<string[]>([]);
+  const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setSelectedUsername('');
       setPassword('');
       setLocalError('');
+      setShowResetPasswordModal(false);
       dispatch(clearError());
     }
   }, [isOpen, dispatch]);
@@ -94,8 +97,18 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
       const loginResult = await dispatch(loginUser({ username: selectedUsername, password }));
 
       if (loginUser.fulfilled.match(loginResult)) {
-        onLoginSuccess();
-        onClose();
+        const userData = loginResult.payload?.user;
+        const needsReset = userData?.isResetPassword === true;
+
+        if (needsReset) {
+          // Fetch user profile to get latest isResetPassword status
+          await dispatch(fetchUserProfile());
+          // Show reset password modal instead of closing
+          setShowResetPasswordModal(true);
+        } else {
+          onLoginSuccess();
+          onClose();
+        }
       } else if (loginUser.rejected.match(loginResult)) {
         // Login failed - clear password field and show error message
         setPassword('');
@@ -136,7 +149,14 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
     setSelectedUsername('');
     setPassword('');
     setLocalError('');
+    setShowResetPasswordModal(false);
     dispatch(clearError());
+    onClose();
+  };
+
+  const handleResetPasswordSuccess = () => {
+    setShowResetPasswordModal(false);
+    onLoginSuccess();
     onClose();
   };
 
@@ -231,6 +251,12 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess
           {displayError && <div className={styles.error}>{displayError}</div>}
         </form>
       </div>
+
+      <ResetPasswordModal
+        isOpen={showResetPasswordModal}
+        onClose={() => setShowResetPasswordModal(false)}
+        onResetSuccess={handleResetPasswordSuccess}
+      />
     </div>
   );
 };

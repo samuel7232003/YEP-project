@@ -11,6 +11,7 @@ export interface UserProfile {
   name?: string;
   image?: string;
   status?: string;
+  isResetPassword?: boolean;
 }
 
 interface VotingState {

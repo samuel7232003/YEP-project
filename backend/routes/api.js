@@ -6,6 +6,7 @@ const {
   getUsernames,
   uploadAvatar,
   updateProfile,
+  resetUserPassword,
 } = require("../controllers/authController");
 const multer = require("multer");
 const storage = multer.memoryStorage();
@@ -67,6 +68,7 @@ routerAPI.post(
   uploadAvatar
 );
 routerAPI.put("/auth/profile", authenticate, updateProfile);
+routerAPI.post("/auth/reset-password", authenticate, resetUserPassword);
 
 // Voting routes
 routerAPI.get("/voting/users", getUsers);

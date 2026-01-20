@@ -46,6 +46,7 @@ export interface AuthResponse {
     user: {
       _id: string;
       username: string;
+      isResetPassword?: boolean;
     };
     token: string;
   };
@@ -119,8 +120,13 @@ export const votingApi = {
     return response.data;
   },
 
-  getProfile: async (): Promise<{ success: boolean; data: { _id: string; username: string; name?: string; image?: string; status?: string } }> => {
+  getProfile: async (): Promise<{ success: boolean; data: { _id: string; username: string; name?: string; image?: string; status?: string; isResetPassword?: boolean } }> => {
     const response = await axiosInstance.get('/auth/profile');
+    return response.data;
+  },
+
+  resetPassword: async (newPassword: string): Promise<{ success: boolean; message: string; data: any }> => {
+    const response = await axiosInstance.post('/auth/reset-password', { newPassword });
     return response.data;
   },
 
