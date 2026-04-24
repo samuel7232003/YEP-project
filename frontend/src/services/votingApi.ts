@@ -161,6 +161,23 @@ export const votingApi = {
     return response.data;
   },
 
+  getMyLockedSuspect: async (): Promise<{
+    success: boolean;
+    data: { _id: string; name: string; image: string } | null;
+  }> => {
+    const response = await axiosInstance.get('/voting/my-locked-suspect');
+    return response.data;
+  },
+
+  lockSuspect: async (suspectId: string): Promise<{
+    success: boolean;
+    message: string;
+    data: { suspectId: string };
+  }> => {
+    const response = await axiosInstance.post('/voting/lock-suspect', { suspectId });
+    return response.data;
+  },
+
   vote: async (userId: string): Promise<VoteResponse> => {
     const response = await axiosInstance.post('/voting/vote', { userId });
     return response.data;

@@ -133,6 +133,35 @@ const initializeDefaultUsers = async () => {
   await updateVoteCounts();
 };
 
+const getMyLockedSuspect = async (userId) => {
+  const user = await User.findById(userId)
+    .select("lockedSuspectId")
+    .populate("lockedSuspectId", "name image");
+  if (!user || !user.lockedSuspectId) return null;
+  const suspect = user.lockedSuspectId;
+  return {
+    _id: suspect._id.toString(),
+    name: suspect.name || "",
+    image: suspect.image || "https://via.placeholder.com/150",
+  };
+};
+
+const lockSuspect = async (voterId, suspectId) => {
+  const user = await User.findById(voterId);
+  if (!user) throw new Error("Không tìm thấy người dùng");
+  if (user.lockedSuspectId) {
+    throw new Error("Bạn đã chốt nghi phạm và không thể thay đổi");
+  }
+  if (voterId === suspectId) {
+    throw new Error("Không thể chọn chính mình làm nghi phạm");
+  }
+  const suspect = await User.findById(suspectId);
+  if (!suspect) throw new Error("Không tìm thấy người được chọn");
+  user.lockedSuspectId = suspectId;
+  await user.save();
+  return { suspectId };
+};
+
 module.exports = {
   getAllVotingUsers,
   getVotingUserById,
@@ -142,4 +171,6 @@ module.exports = {
   updateVoteCounts,
   initializeDefaultUsers,
   getVotersForUser,
+  getMyLockedSuspect,
+  lockSuspect,
 };

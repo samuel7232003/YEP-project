@@ -31,6 +31,8 @@ const {
   vote,
   initDefaultUsers,
   getVoters,
+  getMyLockedSuspect,
+  lockSuspect,
 } = require("../controllers/votingController");
 const {
   getComments,
@@ -76,6 +78,8 @@ routerAPI.get("/voting/users/:id", getUser);
 routerAPI.post("/voting/users", authenticate, createUser);
 routerAPI.get("/voting/my-votes", authenticate, getMyVotes);
 routerAPI.post("/voting/vote", authenticate, vote);
+routerAPI.get("/voting/my-locked-suspect", authenticate, getMyLockedSuspect);
+routerAPI.post("/voting/lock-suspect", authenticate, lockSuspect);
 routerAPI.post("/voting/init-default-users", initDefaultUsers);
 routerAPI.get("/voting/users/:id/voters", getVoters);
 routerAPI.get("/voting/config", require("../controllers/adminController").getPublicConfig);

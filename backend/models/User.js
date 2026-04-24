@@ -36,6 +36,11 @@ const userSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    lockedSuspectId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
   },
   {
     timestamps: true,

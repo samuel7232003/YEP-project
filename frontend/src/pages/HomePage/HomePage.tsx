@@ -16,6 +16,7 @@ import LoginModal from "../../components/LoginModal/LoginModal";
 import EditProfileModal from "../../components/EditProfileModal/EditProfileModal";
 import StatusModal from "../../components/StatusModal/StatusModal";
 import ResetPasswordModal from "../../components/ResetPasswordModal/ResetPasswordModal";
+import LockSuspectModal from "../../components/LockSuspectModal/LockSuspectModal";
 import styles from "./HomePage.module.css";
 
 interface UserRank {
@@ -38,6 +39,12 @@ const HomePage = () => {
   const [highlightedUsers, setHighlightedUsers] = useState<Set<string>>(new Set());
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [maxVotesPerUser, setMaxVotesPerUser] = useState<number>(3);
+  const [lockedSuspect, setLockedSuspect] = useState<{
+    _id: string;
+    name: string;
+    image: string;
+  } | null>(null);
+  const [isLockSuspectModalOpen, setIsLockSuspectModalOpen] = useState(false);
 
   const previousRanksRef = useRef<Map<string, UserRank>>(new Map());
   const cardRefsRef = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -83,6 +90,23 @@ const HomePage = () => {
       dispatch(fetchUserProfile());
     }
   }, [currentUser, dispatch]);
+
+  useEffect(() => {
+    if (!currentUser || !userProfile?._id) {
+      setLockedSuspect(null);
+      return;
+    }
+    const fetchLocked = async () => {
+      try {
+        const res = await votingApi.getMyLockedSuspect();
+        if (res.success && res.data) setLockedSuspect(res.data);
+        else setLockedSuspect(null);
+      } catch {
+        setLockedSuspect(null);
+      }
+    };
+    fetchLocked();
+  }, [currentUser, userProfile?._id]);
 
   useEffect(() => {
     // Show reset password modal if user needs to reset password
@@ -583,6 +607,28 @@ const HomePage = () => {
     }
   };
 
+  const handleLockSuspectClick = () => {
+    if (lockedSuspect) return;
+    setIsLockSuspectModalOpen(true);
+  };
+
+  const handleLockSuspectKeyDown = (e: React.KeyboardEvent) => {
+    if ((e.key === 'Enter' || e.key === ' ') && !lockedSuspect) {
+      e.preventDefault();
+      setIsLockSuspectModalOpen(true);
+    }
+  };
+
+  const handleLockSuccess = async () => {
+    try {
+      const res = await votingApi.getMyLockedSuspect();
+      if (res.success && res.data) setLockedSuspect(res.data);
+      else setLockedSuspect(null);
+    } catch {
+      setLockedSuspect(null);
+    }
+  };
+
   return (
     <div className={`${styles.container} ${isCurrentUserDangerous ? styles.currentUserDangerous : ''}`}>
       <div className={styles.header}>
@@ -662,6 +708,17 @@ const HomePage = () => {
             <span className={styles.voteInfo}>
               ({userVotes.length}/{maxVotesPerUser} votes)
             </span>
+            <button
+              type="button"
+              className={`${styles.lockSuspectButton} ${lockedSuspect ? styles.lockSuspectButtonDisabled : ''}`}
+              onClick={handleLockSuspectClick}
+              onKeyDown={handleLockSuspectKeyDown}
+              disabled={!!lockedSuspect}
+              tabIndex={0}
+              aria-label={lockedSuspect ? 'Đã chốt nghi phạm' : 'Chốt nghi phạm'}
+            >
+              {lockedSuspect ? 'Đã chốt' : 'Chốt nghi phạm'}
+            </button>
           </div>
         ) : (
           <button
@@ -778,6 +835,14 @@ const HomePage = () => {
         onClose={() => setIsResetPasswordModalOpen(false)}
         onResetSuccess={handleResetPasswordSuccess}
         preventClose={true}
+      />
+
+      <LockSuspectModal
+        isOpen={isLockSuspectModalOpen}
+        onClose={() => setIsLockSuspectModalOpen(false)}
+        currentUserId={userProfile?._id ?? null}
+        users={users.map((u) => ({ _id: u.id, id: u.id, name: u.name, image: u.image }))}
+        onLockSuccess={handleLockSuccess}
       />
     </div>
   );

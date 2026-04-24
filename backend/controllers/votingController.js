@@ -6,6 +6,8 @@ const {
   voteForUser,
   initializeDefaultUsers,
   getVotersForUser,
+  getMyLockedSuspect,
+  lockSuspect,
 } = require("../services/votingService");
 
 const getUsers = async (req, res) => {
@@ -174,6 +176,48 @@ const getVoters = async (req, res) => {
   }
 };
 
+const getMyLockedSuspectHandler = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const suspect = await getMyLockedSuspect(userId);
+    res.status(200).json({
+      success: true,
+      data: suspect,
+    });
+  } catch (error) {
+    console.log("Get my locked suspect error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Lỗi khi lấy nghi phạm đã chốt",
+    });
+  }
+};
+
+const lockSuspectHandler = async (req, res) => {
+  try {
+    const voterId = req.userId;
+    const { suspectId } = req.body;
+    if (!suspectId) {
+      return res.status(400).json({
+        success: false,
+        message: "suspectId là bắt buộc",
+      });
+    }
+    await lockSuspect(voterId, suspectId);
+    res.status(200).json({
+      success: true,
+      message: "Chốt nghi phạm thành công",
+      data: { suspectId },
+    });
+  } catch (error) {
+    console.log("Lock suspect error:", error);
+    res.status(400).json({
+      success: false,
+      message: error.message || "Chốt nghi phạm thất bại",
+    });
+  }
+};
+
 module.exports = {
   getUsers,
   getUser,
@@ -182,4 +226,6 @@ module.exports = {
   vote,
   initDefaultUsers,
   getVoters,
+  getMyLockedSuspect: getMyLockedSuspectHandler,
+  lockSuspect: lockSuspectHandler,
 };
